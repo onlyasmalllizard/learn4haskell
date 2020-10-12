@@ -156,7 +156,7 @@ Prepend an element at the beginning of a list:
 
 Reverse a list:
 >>> :t reverse
-everse :: [a] -> [a]
+reverse :: [a] -> [a]
 
 Take first N elements of a list:
 >>> :t take
@@ -352,6 +352,7 @@ ghci> :l src/Chapter2.hs
 subList :: Int -> Int -> [a] -> [a]
 subList num1 num2 inputList 
   | num1 < 0  || num2 < 0 = []
+  | num2 < num1 = []
   | otherwise = returnList num1 num2 inputList where
   returnList :: Int -> Int -> [a] -> [a]
   returnList num1 num2 inputList = let reducedList = drop num1 inputList in take (num2 - num1 + 1) reducedList
@@ -555,7 +556,7 @@ For example, we can patch the previous function to count the number of
 steps we need to take in order to reduce the number to zero.
 
 🤔 Blitz question: can you guess what this number represents?
-The size of the stack created by the recursive function
+How many factors of 2 are in the number, rounded up
 
 @
 divToZero :: Int -> Int
@@ -628,7 +629,7 @@ Implement a function that duplicates each element of the list
 -}
 duplicate :: [a] -> [a]
 duplicate [] = []
-duplicate (x:xs) = [x, x] ++ duplicate xs
+duplicate (x:xs) = x : x : duplicate xs
 
 
 {- |
@@ -644,13 +645,13 @@ Write a function that takes elements of a list only on even positions.
 [2,3,4]
 -}
 takeEven :: [a] -> [a]
-takeEven list = go 0 list
+takeEven list = go True list
   where
-    go :: Int -> [a] -> [a]
+    go :: Bool -> [a] -> [a]
     go acc [] = []
     go acc (x : xs)
-      | mod acc 2 == 0 = [x] ++ go (acc + 1) xs
-      | otherwise = go (acc + 1) xs
+      | acc = x : go (not acc) xs
+      | otherwise = go (not acc) xs
 
 {- |
 =🛡= Higher-order functions
@@ -757,7 +758,7 @@ value of the element itself
 🕯 HINT: Use combination of 'map' and 'replicate'
 -}
 smartReplicate :: [Int] -> [Int]
-smartReplicate l = concat (map (\x -> replicate x x) l)
+smartReplicate = concatMap (\x -> replicate x x)
 
 {- |
 =⚔️= Task 9
@@ -771,8 +772,7 @@ the list with only those lists that contain a passed element.
 🕯 HINT: Use the 'elem' function to check whether an element belongs to a list
 -}
 contains :: Int -> [[Int]] -> [[Int]]
-contains num [x] = if (elem num x) then [x] else []
-contains num (x : xs) = if (elem num x) then x : (contains num xs) else contains num xs
+contains num = filter (\x -> elem num x)
 
 
 {- |
@@ -877,7 +877,15 @@ list.
 rotate :: Int -> [a] -> [a]
 rotate num list
   | num < 0 = []
-  | otherwise = let len = (length list) + num in drop num (take len (cycle list))
+  | null list = []
+  | num > (length list) = rList (reduceNum num (length list)) list
+  | otherwise = rList num list
+  where
+    rList :: Int -> [a] -> [a]
+    rList num list = let len = (length list) + num in drop num (take len (cycle list))
+    reduceNum :: Int -> Int -> Int
+    reduceNum rotateNum listLen = rotateNum - (listLen * (div rotateNum listLen))
+
 
 {- |
 =💣= Task 12*
@@ -894,9 +902,13 @@ and reverses it.
   cheating!
 -}
 rewind :: [a] -> [a]
-rewind [x] = [x]
-rewind (x : xs) = rewind xs ++ [x]
-
+rewind list = let len = length list in go 0 len list
+  where
+    go :: Int -> Int -> [a] -> [a]
+    go acc len list
+      | null list = []
+      | acc < len = drop (len - (acc + 1)) list ++ go (acc + 1) len (take (len - (acc + 1)) list)
+      | otherwise = list
 
 {-
 You did it! Now it is time to the open pull request with your changes
