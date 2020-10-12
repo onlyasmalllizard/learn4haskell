@@ -479,7 +479,7 @@ Implement a function that returns the last digit of a given number.
 -}
 -- DON'T FORGET TO SPECIFY THE TYPE IN HERE
 lastDigit :: Int -> Int
-lastDigit n = mod n 10
+lastDigit n = mod (abs n) 10
 
 
 {- |
@@ -645,9 +645,9 @@ sumLast2:: Int -> Int
 sumLast2 n = let lastNum = takeLast n in lastNum + takeLast (removeDigit n)
   where
     takeLast :: Int -> Int
-    takeLast x = mod x 10
+    takeLast x = mod (abs x) 10
     removeDigit :: Int -> Int
-    removeDigit y = div y 10
+    removeDigit y = div (abs y) 10
 
 
 {- |
